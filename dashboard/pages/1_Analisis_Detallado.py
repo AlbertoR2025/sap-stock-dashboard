@@ -117,7 +117,7 @@ def normalize(col):
 
 @st.cache_data
 def load_data():
-    ruta = os.path.join("data", "inventario_procesado_final.csv")
+    ruta = "dashboard/data/inventario_procesado_final.csv"
     df = pd.read_csv(ruta, sep=",")
     df.columns = [normalize(c) for c in df.columns]
     return df
