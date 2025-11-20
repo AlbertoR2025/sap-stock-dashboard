@@ -3,7 +3,7 @@ import os
 from .columnas import estandarizar_columnas
 
 def cargar_datos():
-    ruta = os.path.join("data", "inventario_procesado_final.csv")
+    ruta = "dashboard/data/inventario_procesado_final.csv"
 
     df = pd.read_csv(ruta, encoding="utf-8")
 
