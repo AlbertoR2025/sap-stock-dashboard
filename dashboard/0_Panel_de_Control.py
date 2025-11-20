@@ -4,7 +4,7 @@ from utils.data_loader import cargar_datos
 import plotly.express as px
 import pandas as pd
 
-df = pd.read_csv("data/inventario_procesado_final.csv", encoding="utf-8-sig")
+df = pd.read_csv("dashboard/data/inventario_procesado_final.csv", encoding="utf-8-sig")
 df.columns = df.columns.astype(str).str.strip().str.upper()
 
 
