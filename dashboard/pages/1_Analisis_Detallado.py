@@ -109,6 +109,11 @@ SUCCESS = "#2EE59D"
 WARNING = "#FFC861"
 
 # =============== NORMALIZAR CSV ============================
+import os
+import pandas as pd
+import unicodedata
+import streamlit as st
+
 def normalize(col):
     col = col.strip().lower()
     col = ''.join(c for c in unicodedata.normalize('NFD', col) if unicodedata.category(c) != 'Mn')
@@ -118,16 +123,30 @@ def normalize(col):
 @st.cache_data
 def load_data():
     ruta = os.path.join("data", "inventario_procesado_final.csv")
-    df = pd.read_csv(ruta, sep=",")
-    df.columns = [normalize(c) for c in df.columns]
-    return df
+    url_remota = "https://raw.githubusercontent.com/AlbertoR2025/sap-stock-dashboard/main/dashboard/data/inventario_procesado_final.csv"
+    try:
+        if os.path.exists(ruta):
+            df = pd.read_csv(ruta, sep=",")
+        else:
+            df = pd.read_csv(url_remota, sep=",")
+        df.columns = [normalize(c) for c in df.columns]
+        return df
+    except Exception as e:
+        st.error(f"Error cargando datos: {e}")
+        return pd.DataFrame()
 
 df = load_data()
-top_materiales = df.groupby(['material', 'descripcion'], as_index=False).agg({
-    'stock': 'sum',
-    'cajas': 'sum',
-    'pallets': 'sum'
-})
+
+if not df.empty:
+    top_materiales = df.groupby(['material', 'descripcion'], as_index=False).agg({
+        'stock': 'sum',
+        'cajas': 'sum',
+        'pallets': 'sum'
+    })
+    # Resto de tu código para visualización aquí
+else:
+    st.warning("No se pudo cargar el archivo de inventario. Verifica la ruta o el estado del archivo en GitHub.")
+
 
 # ===================== GRÁFICO 1 (Barras Horizontal) ========================
 st.markdown("""
@@ -342,3 +361,4 @@ st.markdown("---")
 
 st.markdown("---")
 st.success("🎯 **Análisis visual completado** - Vista integral del inventario SAP")
+
