@@ -1,196 +1,344 @@
-# 1_Analisis_Detallado.py
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 import unicodedata
 import os
 
-st.set_page_config(page_title="Análisis Detallado", page_icon="Chart Increasing", layout="wide")
+st.set_page_config(page_title="Análisis Detallado", page_icon="📈", layout="wide")
 
-# ========================= CSS FUTURISTA + NEÓN ============================
+# ========================= CSS PREMIUM + FONDO 3D ============================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap');
-    
-    body, .stApp {
-        background: #0a0e17 !important;
-        color: #e0f2fe;
-    }
-    .block-container {
-        background: linear-gradient(145deg, #111827, #1a2332);
-        border-radius: 28px;
-        padding: 3rem;
-        margin: 2rem auto;
-        max-width: 95%;
-        box-shadow: 
-            0 0 60px rgba(0, 255, 255, 0.3),
-            0 0 120px rgba(0, 255, 255, 0.15),
-            inset 0 0 40px rgba(0, 255, 255, 0.1);
-        border: 1px solid rgba(0, 255, 255, 0.4);
-    }
-    .graph-title {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 28px;
-        font-weight: 900;
-        color: #00ffff;
-        text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
-        padding: 18px 25px;
-        background: rgba(0, 255, 255, 0.1);
-        border-left: 6px solid #00ffff;
-        border-radius: 12px;
-        margin: 30px 0 20px;
-        box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
-        animation: neon-pulse 3s infinite alternate;
-    }
-    @keyframes neon-pulse {
-        from { box-shadow: 0 0 20px #00ffff40, 0 0 40px #00ffff20; }
-        to   { box-shadow: 0 0 40px #00ffff80, 0 0 80px #00ffff40; }
-    }
-    .stPlotlyChart { border-radius: 20px; overflow: hidden; }
+body, .stApp { background: #14151a !important; }
+.block-container {
+    background: linear-gradient(135deg, #16171c 0%, #262a34 100%);
+    box-shadow: 0 4px 32px 0 #00e5ff55, 0 1.5rem 5rem 0 #000c !important;
+    border-radius: 30px !important;
+    padding: 3rem 3.5rem !important;
+    margin-top: 1rem !important;
+    margin-bottom: 3rem !important;
+    border: 2px solid rgba(0,229,255,0.19);
+    animation: base-glow 3s infinite alternate;
+}
+@keyframes base-glow {
+  0% { box-shadow: 0 0 60px #00e5ff55, 0 8px 40px #000c; border-color: rgba(0,229,255,0.3);}
+  100% { box-shadow: 0 0 100px #00e5ffa0, 0 8px 60px #001a; border-color: rgba(0,229,255,0.5);}
+}
+.graph-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    padding: 12px 20px;
+    border-left: 5px solid #00E5FF;
+    background: rgba(0,229,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(0,229,255,0.15), 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: glow-pulse 2s ease-in-out infinite alternate;
+}
+@keyframes glow-pulse {
+    from { box-shadow: 0 0 15px rgba(0,229,255,0.2), 0 4px 15px rgba(0,0,0,0.3);}
+    to   { box-shadow: 0 0 30px rgba(0,229,255,0.4), 0 4px 20px rgba(0,0,0,0.4);}
+}
+.graph-title-icon {
+    font-size: 28px;
+    filter: drop-shadow(0 0 10px rgba(0,229,255,0.6));
+}
+.section-title-main {
+    background: linear-gradient(135deg, #1a3a3a 0%, #2c5364 100%);
+    padding: 20px 30px;
+    border-radius: 18px;
+    margin: 15px auto 15px auto;
+    max-width: 650px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5),
+        0 0 0 2px rgba(0,229,255,0.4) inset, 0 0 50px rgba(0,229,255,0.25);
+    border: 2px solid rgba(0,229,255,0.5);
+    border-left: 6px solid #00E5FF;
+    position: relative;
+    overflow: hidden;
+}
+.section-title-main::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg,transparent,rgba(0,229,255,0.2),transparent);
+    animation: slide-title 3s infinite;
+}
+@keyframes slide-title {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+}
+.section-title-main h2 {
+    margin: 0; padding: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-shadow: 0 0 15px rgba(0,229,255,0.6), 0 2px 6px rgba(0,0,0,0.4);
+    animation: glow-title 2s ease-in-out infinite alternate;
+}
+.section-title-main h2 span {
+    font-size: 34px;
+    filter: drop-shadow(0 0 10px rgba(0,229,255,0.7));
+}
+.main-title, .graph-title { z-index: 10; position: relative; }
 </style>
 """, unsafe_allow_html=True)
 
-# ========================= NORMALIZAR NOMBRES ============================
+# =================== PORTADA GLOW ANIMADA ==================
+st.markdown("""
+<div class="section-title-main">
+    <h2><span>📈</span> Análisis Detallado de Inventario</h2>
+</div>
+""", unsafe_allow_html=True)
+
+# =============== PALETA DE COLORES =========================
+PRIMARY = "#00E5FF"
+ACCENT = "#FF6B6B"
+SUCCESS = "#2EE59D"
+WARNING = "#FFC861"
+
+# =============== NORMALIZAR CSV ============================
 def normalize(col):
     col = col.strip().lower()
     col = ''.join(c for c in unicodedata.normalize('NFD', col) if unicodedata.category(c) != 'Mn')
-    col = col.replace(" ", "_").replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+    col = col.replace(" ", "_")
     return col
 
-# ========================= CARGAR DATOS DESDE GITHUB ============================
-@st.cache_data(ttl=60)
+@st.cache_data
 def load_data():
-    url = "https://raw.githubusercontent.com/AlbertoR2025/sap-stock-dashboard/main/dashboard/data/inventario_procesado_final.csv"
-    try:
-        df = pd.read_csv(url)
-        df.columns = [normalize(c) for c in df.columns]
-        return df
-    except:
-        st.error("No se pudo cargar el inventario desde GitHub")
-        st.info("Verifica que el archivo esté en: dashboard/data/inventario_procesado_final.csv")
-        return pd.DataFrame()
+    ruta = "dashboard/data/inventario_procesado_final.csv"
+    df = pd.read_csv(ruta, sep=",")
+    df.columns = [normalize(c) for c in df.columns]
+    return df
 
 df = load_data()
+top_materiales = df.groupby(['material', 'descripcion'], as_index=False).agg({
+    'stock': 'sum',
+    'cajas': 'sum',
+    'pallets': 'sum'
+})
 
-if df.empty:
-    st.stop()
+# ===================== GRÁFICO 1 (Barras Horizontal) ========================
+st.markdown("""
+<div class="graph-title">
+    <span class="graph-title-icon">📦</span>
+    <span>Top 15 Materiales con Mayor Stock</span>
+</div>
+""", unsafe_allow_html=True)
+top_15 = top_materiales.nlargest(15, 'stock')
+fig_barras = px.bar(
+    top_15, x='stock', y='descripcion', orientation='h',
+    title='', color='stock',
+    color_continuous_scale=[[0, '#0E1117'], [0.5, PRIMARY], [1, ACCENT]],
+    text='stock',
+    hover_data={'material': True, 'stock': ':,.0f', 'cajas': ':,.0f', 'pallets': ':,.0f'}
+)
+fig_barras.update_layout(
+    yaxis={'categoryorder': 'total ascending'},
+    xaxis_title="Stock Total",
+    showlegend=False,
+    template='plotly_dark',
+    height=500,
+    font=dict(size=12, family='Arial, sans-serif'),
+    coloraxis_showscale=False,
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)'
+)
+fig_barras.update_traces(
+    texttemplate='%{text:,.0f}',
+    textposition='outside',
+    textfont=dict(size=11, color='white'),
+    marker_line_color='rgba(0,229,255,0.3)',
+    marker_line_width=1
+)
+st.plotly_chart(fig_barras, use_container_width=True)
+st.markdown("---")
 
-# ========================= KPIs SUPER VISUALES ============================
-st.markdown("<h1 class='graph-title'>Analysis Increasing REPORTE EJECUTIVO - INVENTARIO SAP</h1>", unsafe_allow_html=True)
-
-col1, col2, col3, col4, col5, col6 = st.columns(6)
-with col1:
-    st.markdown(f"<div style='text-align:center;background:#1e40af;padding:20px;border-radius:15px;box-shadow:0 0 30px #1e40af60;'><h2 style='margin:0;color:#60a5fa;'>Registros</h2><h1 style='margin:5px 0;color:white;'>{len(df):,}</h1></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown(f"<div style='text-align:center;background:#7c3aed;padding:20px;border-radius:15px;box-shadow:0 0 30px #7c3aed60;'><h2 style='margin:0;color:#c4b5fd;'>Materiales</h2><h1 style='margin:5px 0;color:white;'>{df['material'].nunique()}</h1></div>", unsafe_allow_html=True)
-with col3:
-    st.markdown(f"<div style='text-align:center;background:#0891b2;padding:20px;border-radius:15px;box-shadow:0 0 30px #0891b260;'><h2 style='margin:0;color:#a5feca;'>Unidades</h2><h1 style='margin:5px 0;color:white;'>{int(df['stock'].sum()):,}</h1></div>", unsafe_allow_html=True)
-with col4:
-    st.markdown(f"<div style='text-align:center;background:#dc2626;padding:20px;border-radius:15px;box-shadow:0 0 30px #dc262660;'><h2 style='margin:0;color:#fca5a5;'>Cajas</h2><h1 style='margin:5px 0;color:white;'>{int(df['cajas'].sum()):,}</h1></div>", unsafe_allow_html=True)
-with col5:
-    st.markdown(f"<div style='text-align:center;background:#f59e0b;padding:20px;border-radius:15px;box-shadow:0 0 30px #f59e0b60;'><h2 style='margin:0;color:#fde68a;'>Pallets</h2><h1 style='margin:5px 0;color:white;'>{df['pallets'].sum():.1f}</h1></div>", unsafe_allow_html=True)
-with col6:
-    st.markdown(f"<div style='text-align:center;background:#10b981;padding:20px;border-radius:15px;box-shadow:0 0 30px #10b98160;'><h2 style='margin:0;color:#86efac;'>Camiones</h2><h1 style='margin:5px 0;color:white;'>{df['camiones'].sum():.1f}</h1></div>", unsafe_allow_html=True)
-
-# ========================= SUNBURST ULTRA BRILLANTE ============================
-st.markdown("<h1 class='graph-title'>Sunburst Chart TOP 10 POR CAJAS - EFECTO NEÓN</h1>", unsafe_allow_html=True)
-
-top10 = df.groupby(['material', 'descripcion'])['cajas'].sum().nlargest(10).reset_index()
-top10 = top10.merge(df.groupby('material')['stock'].sum(), on='material')
-
-# Colores NEÓN intensos y únicos
-colors = [
-    "#00ffff", "#ff00ff", "#ffff00", "#00ff00", "#ff3366",
-    "#3366ff", "#ff6600", "#00ffcc", "#ff0066", "#66ff33"
+# ===================== GRÁFICO 2 (Sunburst Cajas) ========================
+st.markdown("""
+<div class="graph-title">
+    <span class="graph-title-icon">📦</span>
+    <span>Top 5 Materiales por Cajas</span>
+</div>
+""", unsafe_allow_html=True)
+top_5_cajas = top_materiales.nlargest(5, 'cajas').copy().reset_index(drop=True)
+top_5_cajas['descripcion_corta'] = top_5_cajas['descripcion'].str[:45] + '...'
+total_cajas = top_5_cajas['cajas'].sum()
+labels_cajas = ['Top 5'] + top_5_cajas['material'].astype(str).tolist()
+parents_cajas = [''] + ['Top 5'] * len(top_5_cajas)
+values_cajas = [total_cajas] + top_5_cajas['cajas'].tolist()
+colors_cajas = ['#0a2342', '#FF6B35', '#F7931E', '#FF5E78', '#FF477E', '#E63946']
+texto_centro_cajas = f"Total<br>{total_cajas:,.0f}<br>cajas"
+texts_display_cajas = [texto_centro_cajas] + [
+    f"{row['material']}<br>{row['cajas']:,.0f}<br>{row['cajas']/total_cajas*100:.0f}%"
+    for _, row in top_5_cajas.iterrows()
 ]
-
-labels = ["TOTAL"] + list(top10['descripcion'])
-parents = [""] + ["TOTAL"] * len(top10)
-values = [top10['cajas'].sum()] + list(top10['cajas'])
-hover_texts = ["Todo el inventario"] + [
-    f"<b>{row['descripcion']}</b><br>"
-    f"Material: {row['material']}<br>"
-    f"Cajas: {int(row['cajas']):,}<br>"
-    f"Unidades: {int(row['stock']):,}<br>"
-    f"{row['cajas']/top10['cajas'].sum()*100:.1f}% del total"
-    for _, row in top10.iterrows()
+hover_texts_cajas = [f"<b>Total Top 5</b><br>{total_cajas:,.0f} cajas"] + [
+    f"<b>Material: {row['material']}</b><br>{row['descripcion']}<br>" +
+    f"Cajas: {row['cajas']:,.0f}<br>Stock: {row['stock']:,.0f}<br>Pallets: {row['pallets']:,.0f}<br>" +
+    f"Porcentaje: {row['cajas']/total_cajas*100:.1f}%"
+    for _, row in top_5_cajas.iterrows()
 ]
-
-fig = go.Figure(go.Sunburst(
-    labels=labels,
-    parents=parents,
-    values=values,
-    branchvalues="total",
-    marker=dict(
-        colors=colors,
-        line=dict(color="#000", width=3),
-        colorscale='electric',
-        cmin=values[1:],
-        cmax=values[0]
+fig_sunburst_cajas = go.Figure(go.Sunburst(
+    labels=labels_cajas, parents=parents_cajas, values=values_cajas,
+    text=texts_display_cajas, textinfo='text',
+    insidetextorientation='auto',
+    textfont=dict(size=13, color='white', family='Arial, sans-serif', weight='bold'),
+    marker=dict(colors=colors_cajas, line=dict(color='#0E1117', width=2)),
+    customdata=hover_texts_cajas, hovertemplate='%{customdata}<extra></extra>',
+    branchvalues='total'
+))
+fig_sunburst_cajas.update_layout(
+    template='plotly_dark', height=650, showlegend=True,
+    legend=dict(
+        orientation="v",
+        yanchor="middle",
+        y=0.5,
+        xanchor="left",
+        x=1.02,
+        font=dict(size=11, color='white', family='Arial'),
+        bgcolor='rgba(0,0,0,0)',
+        bordercolor='rgba(0,229,255,0.3)', borderwidth=1
     ),
-    hovertemplate="<b>%{label}</b><br>%{customdata}<extra></extra>",
-    customdata=hover_texts,
-    textinfo="label+percent entry",
-    insidetextorientation='radial',
-    textfont=dict(size=16, color="white", family="Orbitron")
-))
-
-fig.update_layout(
-    margin=dict(t=0, l=0, r=0, b=0),
-    paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(0,0,0,0)',
-    height=800,
-    font=dict(color="#e0f2fe", family="Orbitron"),
-    annotations=[dict(
-        text="Chart Increasing TOP 10 MATERIALES POR CAJAS",
-        x=0.5, y=1.05, xref="paper", yref="paper",
-        showarrow=False,
-        font=dict(size=20, color="#00ffff"),
-        font_family="Orbitron"
-    )]
+    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20, r=250, t=20, b=20),
+    xaxis=dict(visible=False), yaxis=dict(visible=False)
 )
+for idx in range(len(top_5_cajas)):
+    row = top_5_cajas.iloc[idx]
+    fig_sunburst_cajas.add_trace(go.Scatter(
+        x=[None], y=[None], mode='markers', marker=dict(size=10, color=colors_cajas[idx+1]),
+        legendgroup=str(row['material']), showlegend=True, name=row['descripcion_corta']
+    ))
+st.plotly_chart(fig_sunburst_cajas, use_container_width=True)
+st.markdown("---")
 
-st.plotly_chart(fig, use_container_width=True)
-
-# ========================= SUNBURST PALLETS - MEGA BRILLANTE ============================
-st.markdown("<h1 class='graph-title'>Sunburst Chart DISTRIBUCIÓN POR PALLETS</h1>", unsafe_allow_html=True)
-
-top_pallets = df.groupby(['material', 'descripcion'])['pallets'].sum().nlargest(8).reset_index()
-
-colors_p = [
-    "#ff006e", "#00f5ff", "#ffea00", "#00ff85", "#ff2a6d",
-    "#05d9e8", "#ff9a00", "#d400ff"
+# ===================== GRÁFICO 3 (Sunburst Stock) ========================
+st.markdown("""
+<div class="graph-title">
+    <span class="graph-title-icon">📊</span>
+    <span>Top 5 Materiales por Stock</span>
+</div>
+""", unsafe_allow_html=True)
+top_5_stock = top_materiales.nlargest(5, 'stock').copy().reset_index(drop=True)
+top_5_stock['descripcion_corta'] = top_5_stock['descripcion'].str[:45] + '...'
+total_stock_5 = top_5_stock['stock'].sum()
+labels_5 = ['Top 5'] + top_5_stock['material'].astype(str).tolist()
+parents_5 = [''] + ['Top 5'] * len(top_5_stock)
+values_5 = [total_stock_5] + top_5_stock['stock'].tolist()
+colors_premium_5 = ['#0a2342', '#00E5FF', '#FF6B6B', '#0096FF', '#FFC861', '#9D4EDD']
+texto_centro_5 = f"Total<br>{total_stock_5:,.0f}<br>unidades"
+texts_display_5 = [texto_centro_5] + [
+    f"{row['material']}<br>{row['stock']:,.0f}<br>{row['stock']/total_stock_5*100:.0f}%"
+    for _, row in top_5_stock.iterrows()
 ]
-
-labels_p = ["TOTAL"] + list(top_pallets['descripcion'])
-parents_p = [""] + ["TOTAL"] * len(top_pallets)
-values_p = [top_pallets['pallets'].sum()] + list(top_pallets['pallets'])
-
-hover_p = ["Inventario completo"] + [
-    f"<b>{row['descripcion']}</b><br>Pallets: {row['pallets']:.1f}<br>Unidades: {int(row['stock']):,}"
-    for _, row in top_pallets.iterrows()
+hover_texts_5 = [f"<b>Total Top 5</b><br>{total_stock_5:,.0f} unidades"] + [
+    f"<b>Material: {row['material']}</b><br>{row['descripcion']}<br>" +
+    f"Stock: {row['stock']:,.0f}<br>Porcentaje: {row['stock']/total_stock_5*100:.1f}%"
+    for _, row in top_5_stock.iterrows()
 ]
-
-fig_p = go.Figure(go.Sunburst(
-    labels=labels_p,
-    parents=parents_p,
-    values=values_p,
-    marker=dict(colors=colors_p, line=dict(color="black", width=2)),
-    hovertemplate="%{customdata}<extra></extra>",
-    customdata=hover_p,
-    textinfo="label+percent entry",
-    textfont=dict(size=15, color="white", family="Orbitron")
+fig_sunburst_5 = go.Figure(go.Sunburst(
+    labels=labels_5, parents=parents_5, values=values_5,
+    text=texts_display_5, textinfo='text',
+    insidetextorientation='auto',
+    textfont=dict(size=13, color='white', family='Arial, sans-serif', weight='bold'),
+    marker=dict(colors=colors_premium_5, line=dict(color='#0E1117', width=2)),
+    customdata=hover_texts_5, hovertemplate='%{customdata}<extra></extra>',
+    branchvalues='total'
 ))
-
-fig_p.update_layout(
-    margin=dict(t=40, l=0, r=0, b=0),
-    paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(0,0,0,0)',
-    height=700
+fig_sunburst_5.update_layout(
+    template='plotly_dark', height=650, showlegend=True,
+    legend=dict(
+        orientation="v",
+        yanchor="middle",
+        y=0.5,
+        xanchor="left",
+        x=1.02,
+        font=dict(size=11, color='white', family='Arial'),
+        bgcolor='rgba(0,0,0,0)',
+        bordercolor='rgba(0,229,255,0.3)', borderwidth=1
+    ),
+    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20, r=250, t=20, b=20),
+    xaxis=dict(visible=False), yaxis=dict(visible=False)
 )
+for idx in range(len(top_5_stock)):
+    row = top_5_stock.iloc[idx]
+    fig_sunburst_5.add_trace(go.Scatter(
+        x=[None], y=[None], mode='markers', marker=dict(size=10, color=colors_premium_5[idx+1]),
+        legendgroup=str(row['material']), showlegend=True, name=row['descripcion_corta']
+    ))
+st.plotly_chart(fig_sunburst_5, use_container_width=True)
+st.markdown("---")
 
-st.plotly_chart(fig_p, use_container_width=True)
+# ===================== GRÁFICO 4 (Sunburst Pallets) ========================
+st.markdown("""
+<div class="graph-title">
+    <span class="graph-title-icon">🚛</span>
+    <span>Top 5 Materiales por Pallets</span>
+</div>
+""", unsafe_allow_html=True)
+top_5_pallets = top_materiales.nlargest(5, 'pallets').copy().reset_index(drop=True)
+top_5_pallets['descripcion_corta'] = top_5_pallets['descripcion'].str[:45] + '...'
+total_pallets = top_5_pallets['pallets'].sum()
+labels_pallets = ['Top 5'] + top_5_pallets['material'].astype(str).tolist()
+parents_pallets = [''] + ['Top 5'] * len(top_5_pallets)
+values_pallets = [total_pallets] + top_5_pallets['pallets'].tolist()
+colors_pallets = ['#0a2342', '#00E5FF', '#FF6B6B', '#0096FF', '#FFC861', '#9D4EDD']
+texto_centro_pallets = f"Total<br>{total_pallets:.0f}"
+texts_display_pallets = [texto_centro_pallets] + [
+    f"{row['material']}<br>{row['pallets']:.0f}<br>{row['pallets']/total_pallets*100:.0f}%"
+    for _, row in top_5_pallets.iterrows()
+]
+hover_texts_pallets = [f"<b>Total Top 5</b><br>{total_pallets:.0f} pallets"] + [
+    f"<b>Material: {row['material']}</b><br>{row['descripcion']}<br>" +
+    f"Pallets: {row['pallets']:.0f}<br>Stock: {row['stock']:,.0f}<br>" +
+    f"Porcentaje: {row['pallets']/total_pallets*100:.1f}%"
+    for _, row in top_5_pallets.iterrows()
+]
+fig_sunburst_pallets = go.Figure(go.Sunburst(
+    labels=labels_pallets, parents=parents_pallets, values=values_pallets,
+    text=texts_display_pallets, textinfo='text',
+    insidetextorientation='auto',
+    textfont=dict(size=13, color='white', family='Arial, sans-serif', weight='bold'),
+    marker=dict(colors=colors_pallets, line=dict(color='#0E1117', width=2)),
+    customdata=hover_texts_pallets, hovertemplate='%{customdata}<extra></extra>',
+    branchvalues='total'
+))
+fig_sunburst_pallets.update_layout(
+    template='plotly_dark', height=650, showlegend=True,
+    legend=dict(
+        orientation="v",
+        yanchor="middle",
+        y=0.5,
+        xanchor="left",
+        x=1.02,
+        font=dict(size=11, color='white', family='Arial'),
+        bgcolor='rgba(0,0,0,0)',
+        bordercolor='rgba(0,229,255,0.3)', borderwidth=1
+    ),
+    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20, r=250, t=20, b=20),
+    xaxis=dict(visible=False), yaxis=dict(visible=False)
+)
+for idx in range(len(top_5_pallets)):
+    row = top_5_pallets.iloc[idx]
+    fig_sunburst_pallets.add_trace(go.Scatter(
+        x=[None], y=[None], mode='markers', marker=dict(size=10, color=colors_pallets[idx+1]),
+        legendgroup=str(row['material']), showlegend=True, name=row['descripcion_corta']
+    ))
 
-st.success("Analysis Increasing **Análisis completado** — Datos actualizados al {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+st.plotly_chart(fig_sunburst_pallets, use_container_width=True)
 
-st.markdown("<p style='text-align:center;color:#64748b;margin-top:50px;'>Sistema automático • Nutrisco • Dashboard en vivo</p>", unsafe_allow_html=True)
+st.markdown("---")
+
+st.markdown("---")
+st.success("🎯 **Análisis visual completado** - Vista integral del inventario SAP")
